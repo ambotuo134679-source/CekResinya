@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Resi Semua Jasa Pengiriman</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CBCB',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto { content-visibility: auto; }
+            .shadow-card { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+            .gradient-bg { background: linear-gradient(135deg, #165DFF 0%, #36CBCB 100%); }
+            .status-bar { position: relative; }
+            .status-bar::before {
+                content: ''; position: absolute; left: 16px; top: 32px; bottom: 0;
+                width: 2px; background: #e5e7eb;
+            }
+            .status-item:last-child .status-bar::before { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav class="gradient-bg text-white py-4 shadow-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa fa-truck"></i> Cek Resi Indonesia
+            </h1>
+            <button id="adminBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2">
+                <i class="fa fa-cog"></i> <span class="hidden sm:inline">Admin</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Loading -->
+        <div id="loadingOverlay" class="fixed inset-0 bg-white/80 flex items-center justify-center z-40 hidden">
+            <div class="text-center">
+                <i class="fa fa-spinner fa-spin text-4xl text-primary"></i>
+                <p class="mt-2 text-gray-600">Memuat data...</p>
+            </div>
+        </div>
+
+        <!-- Cek Resi Section -->
+        <section id="cekResiSection" class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-card p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Lacak Paket Anda</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Jasa Pengiriman</label>
+                        <select id="kurirSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                            <option value="">-- Pilih Jasa Pengiriman --</option>
+                            <option value="jne">JNE</option>
+                            <option value="jnt">J&T Express</option>
+                            <option value="tiki">TIKI</option>
+                            <option value="pos">Pos Indonesia</option>
+                            <option value="sicepat">SiCepat</option>
+                            <option value="anteraja">Anteraja</option>
+                            <option value="ninja">Ninja Xpress</option>
+                            <option value="lion">Lion Parcel</option>
+                            <option value="sap">SAP Express</option>
+                            <option value="indah">Indah Logistik</option>
+                            <option value="rpx">RPX</option>
+                            <option value="paxel">Paxel</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Nomor Resi</label>
+                        <div class="relative">
+                            <input type="text" id="resiInput" placeholder="Masukkan nomor resi..." 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                            <button id="cekBtn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white px-5 py-1.5 rounded-lg transition">
+                                <i class="fa fa-search mr-1"></i> Cek
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hasil Pencarian -->
+            <div id="hasilSection" class="hidden">
+                <div class="bg-white rounded-2xl shadow-card p-6 mb-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800" id="hasilKurir"></h3>
+                            <p class="text-gray-500 text-sm">No. Resi: <span id="hasilResi" class="font-mono"></span></p>
+                        </div>
+                        <span id="hasilStatus" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                    </div>
+                    <div id="timelineContainer" class="space-y-6 mt-6"></div>
+                </div>
+            </div>
+
+            <!-- Pesan Tidak Ditemukan -->
+            <div id="notFoundSection" class="hidden text-center py-12">
+                <i class="fa fa-search-minus text-5xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Data Resi Tidak Ditemukan</h3>
+                <p class="text-gray-400">Silakan periksa kembali nomor resi dan jasa pengiriman Anda</p>
+            </div>
+        </section>
+
+        <!-- Modal Login Admin -->
+        <div id="loginModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">Login Admin</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Username</label>
+                        <input type="text" id="usernameInput" placeholder="Masukkan username..." 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Password</label>
+                        <input type="password" id="passwordInput" placeholder="Masukkan password..." 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                    </div>
+                    <p id="loginError" class="text-red-500 text-sm hidden">Username atau password salah!</p>
+                    <div class="flex gap-3 pt-2">
+                        <button id="batalLogin" class="flex-1 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Batal</button>
+                        <button id="masukBtn" class="flex-1 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition">Masuk</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Admin -->
+        <section id="adminSection" class="max-w-4xl mx-auto hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Panel Admin</h2>
+                <button id="logoutBtn" class="text-gray-600 hover:text-danger flex items-center gap-1">
+                    <i class="fa fa-sign-out"></i> Keluar
+                </button>
+            </div>
+
+            <!-- Form Tambah/Edit Resi -->
+            <div class="bg-white rounded-2xl shadow-card p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4" id="formTitle">Tambah Data Resi</h3>
+                <form id="resiForm" class="space-y-4">
+                    <input type="hidden" id="editResiId">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Jasa Pengiriman</label>
+                            <select id="editKurir" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                                <option value="jne">JNE</option>
+                                <option value="jnt">J&T Express</option>
+                                <option value="tiki">TIKI</option>
+                                <option value="pos">Pos Indonesia</option>
+                                <option value="sicepat">SiCepat</option>
+                                <option value="anteraja">Anteraja</option>
+                                <option value="ninja">Ninja Xpress</option>
+                                <option value="lion">Lion Parcel</option>
+                                <option value="sap">SAP Express</option>
+                                <option value="indah">Indah Logistik</option>
+                                <option value="rpx">RPX</option>
+                                <option value="paxel">Paxel</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Nomor Resi</label>
+                            <input type="text" id="editNoResi" required placeholder="Masukkan nomor resi"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Nama Pengirim</label>
+                            <input type="text" id="editPengirim" placeholder="Nama pengirim"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Nama Penerima</label>
+                            <input type="text" id="editPenerima" placeholder="Nama penerima"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Status Terkini</label>
+                        <select id="editStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                            <option value="Pesanan Dibuat">Pesanan Dibuat</option>
+                            <option value="Menunggu Penjemputan">Menunggu Penjemputan</option>
+                            <option value="Sudah Diambil Kurir">Sudah Diambil Kurir</option>
+                            <option value="Sedang Dalam Pengiriman">Sedang Dalam Pengiriman</option>
+                            <option value="Tiba di Kota Tujuan">Tiba di Kota Tujuan</option>
+                            <option value="Sedang Dikirim ke Alamat">Sedang Dikirim ke Alamat</option>
+                            <option value="Sudah Diterima" selected>Sudah Diterima</option>
+                            <option value="Dikembalikan ke Pengirim">Dikembalikan ke Pengirim</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Riwayat Status (Format: Tanggal|Jam|Keterangan)</label>
+                        <textarea id="editRiwayat" rows="5" placeholder="2026-10-08|16:30|Paket diterima&#10;2026-10-08|10:15|Sedang diantar"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" id="resetFormBtn" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Reset</button>
+                        <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition">Simpan</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daftar Resi -->
+            <div class="bg-white rounded-2xl shadow-card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Daftar Resi</h3>
+                <div id="daftarResi" class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-3 px-4 text-gray-600 font-medium">Jasa</th>
+                                <th class="py-3 px-4 text-gray-600 font-medium">No. Resi</th>
+                                <th class="py-3 px-4 text-gray-600 font-medium hidden sm:table-cell">Penerima</th>
+                                <th class="py-3 px-4 text-gray-600 font-medium">Status</th>
+                                <th class="py-3 px-4 text-gray-600 font-medium text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resiTableBody"></tbody>
+                    </table>
+                </div>
+                <p id="emptyData" class="text-gray-400 text-center py-8">Belum ada data resi</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center text-sm">
+            <p>© 2026 Cek Resi Indonesia - Semua Jasa Pengiriman</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==========================================
+        // 🔧 GANTI BAGIAN INI DENGAN FIREBASE KAMU!
+        // ==========================================
+        const firebaseConfig = {
+  apiKey: "AIzaSyAN0aB0YnjduZiPZVMSnZBEbk6AtuC0hnQ",
+  authDomain: "cekresinya.firebaseapp.com",
+  projectId: "cekresinya",
+  storageBucket: "cekresinya.firebasestorage.app",
+  messagingSenderId: "76791022621",
+  appId: "1:76791022621:web:0c1daa7297adcebf7cb2f4"
+};
+
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const RESI_COLLECTION = "data_resi";
+
+        // Konfigurasi Login Admin
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = 'admin123'; // Ganti sesuka hati ya!
+
+        // Nama & Status
+        const KURIR_NAMA = {
+            jne: 'JNE', jnt: 'J&T Express', tiki: 'TIKI', pos: 'Pos Indonesia',
+            sicepat: 'SiCepat', anteraja: 'Anteraja', ninja: 'Ninja Xpress',
+            lion: 'Lion Parcel', sap: 'SAP Express', indah: 'Indah Logistik',
+            rpx: 'RPX', paxel: 'Paxel'
+        };
+        const STATUS_WARNA = {
+            'Pesanan Dibuat': 'bg-gray-100 text-gray-700',
+            'Menunggu Penjemputan': 'bg-blue-50 text-blue-700',
+            'Sudah Diambil Kurir': 'bg-blue-100 text-blue-800',
+            'Sedang Dalam Pengiriman': 'bg-yellow-50 text-yellow-700',
+            'Tiba di Kota Tujuan': 'bg-purple-50 text-purple-700',
+            'Sedang Dikirim ke Alamat': 'bg-cyan-50 text-cyan-700',
+            'Sudah Diterima': 'bg-green-100 text-green-800',
+            'Dikembalikan ke Pengirim': 'bg-red-100 text-red-800'
+        };
+
+        // State
+        let isLoggedIn = false;
+        let daftarResiData = [];
+
+        // DOM Elements
+        const cekResiSection = document.getElementById('cekResiSection');
+        const adminSection = document.getElementById('adminSection');
+        const loginModal = document.getElementById('loginModal');
+        const hasilSection = document.getElementById('hasilSection');
+        const notFoundSection = document.getElementById('notFoundSection');
+        const loading = document.getElementById('loadingOverlay');
+        const kurirSelect = document.getElementById('kurirSelect');
+        const resiInput = document.getElementById('resiInput');
+        const cekBtn = document.getElementById('cekBtn');
+        const adminBtn = document.getElementById('adminBtn');
+        const masukBtn = document.getElementById('masukBtn');
+        const batalLogin = document.getElementById('batalLogin');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const resiForm = document.getElementById('resiForm');
+        const resiTableBody = document.getElementById('resiTableBody');
+        const emptyData = document.getElementById('emptyData');
+
+        // ==========================================
+        // 🔥 FUNGSI FIREBASE
+        // ==========================================
+        
+        // Tampilkan/Sembunyikan Loading
+        function showLoading() { loading.classList.remove('hidden'); }
+        function hideLoading() { loading.classList.add('hidden'); }
+
+        // Ambil Semua Data Resi
+        async function ambilSemuaResi() {
+            try {
+                const snapshot = await db.collection(RESI_COLLECTION).orderBy('createdAt', 'desc').get();
+                daftarResiData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderDaftarResi();
+            } catch (e) {
+                console.error("Error ambil data:", e);
+                alert("Gagal memuat data: " + e.message);
+            }
+        }
+
+        // Tambah Resi Baru
+        async function tambahResi(data) {
+            try {
+                showLoading();
+                await db.collection(RESI_COLLECTION).add({
+                    ...data,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert('Berhasil ditambahkan!');
+                await ambilSemuaResi();
+                resetForm();
+            } catch (e) {
+                alert("Gagal menambah: " + e.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Update Resi
+        async function updateResi(docId, data) {
+            try {
+                showLoading();
+                await db.collection(RESI_COLLECTION).doc(docId).update({
+                    ...data,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert('Berhasil diperbarui!');
+                await ambilSemuaResi();
+                resetForm();
+            } catch (e) {
+                alert("Gagal mengupdate: " + e.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Hapus Resi
+        async function hapusResi(docId) {
+            if (!confirm('Yakin ingin menghapus?')) return;
+            try {
+                showLoading();
+                await db.collection(RESI_COLLECTION).doc(docId).delete();
+                await ambilSemuaResi();
+            } catch (e) {
+                alert("Gagal menghapus: " + e.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ==========================================
+        // 🖥️ ANTARMUKA & EVENT
+        // ==========================================
+
+        // Buka Login
+        adminBtn.addEventListener('click', () => {
+            if (isLoggedIn) {
+                showAdminPanel();
+            } else {
+                loginModal.classList.remove('hidden');
+                document.getElementById('usernameInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginError').classList.add('hidden');
+            }
+        });
+
+        // Login
+        masukBtn.addEventListener('click', () => {
+            const user = document.getElementById('usernameInput').value;
+            const pass = document.getElementById('passwordInput').value;
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                isLoggedIn = true;
+                loginModal.classList.add('hidden');
+                showAdminPanel();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        });
+
+        // Batal Login
+        batalLogin.addEventListener('click', () => loginModal.classList.add('hidden'));
+        loginModal.addEventListener('click', e => e.target === loginModal && loginModal.classList.add('hidden'));
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            isLoggedIn = false;
+            adminSection.classList.add('hidden');
+            cekResiSection.classList.remove('hidden');
+            resetForm();
+        });
+
+        // Cek Resi
+        cekBtn.addEventListener('click', cariResi);
+        resiInput.addEventListener('keypress', e => e.key === 'Enter' && cariResi());
+
+        function cariResi() {
+            const kurir = kurirSelect.value;
+            const noResi = resiInput.value.trim().toUpperCase();
+            hasilSection.classList.add('hidden');
+            notFoundSection.classList.add('hidden');
+            
+            if (!kurir || !noResi) {
+                alert('Pilih jasa dan masukkan nomor resi!');
+                return;
+            }
+            
+            const ditemukan = daftarResiData.find(r => 
+                r.kurir === kurir && r.noResi.toUpperCase() === noResi
+            );
+            
+            ditemukan ? tampilkanHasil(ditemukan) : notFoundSection.classList.remove('hidden');
+        }
+
+        function tampilkanHasil(data) {
+            hasilSection.classList.remove('hidden');
+            document.getElementById('hasilKurir').textContent = KURIR_NAMA[data.kurir];
+            document.getElementById('hasilResi').textContent = data.noResi;
+            
+            const statusEl = document.getElementById('hasilStatus');
+            statusEl.textContent = data.status;
+            statusEl.className = `px-3 py-1 rounded-full text-sm font-medium ${STATUS_WARNA[data.status] || 'bg-gray-100 text-gray-700'}`;
+            
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
+            
+            data.riwayat.forEach((item, idx) => {
+                const isLatest = idx === 0;
+                const div = document.createElement('div');
+                div.className = `status-item status-bar flex gap-4 ${isLatest ? '' : 'opacity-75'}`;
+                div.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center ${isLatest ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}">
+                            <i class="fa ${isLatest ? 'fa-check-circle' : 'fa-circle'} text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="pb-6 flex-1">
+                        <p class="font-medium text-gray-800">${item.keterangan}</p>
+                        <p class="text-sm text-gray-500">${item.tanggal} — ${item.jam}</p>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showAdminPanel() {
+            cekResiSection.classList.add('hidden');
+            adminSection.classList.remove('hidden');
+            hasilSection.classList.add('hidden');
+            notFoundSection.classList.add('hidden');
+            ambilSemuaResi();
+        }
+
+        function renderDaftarResi() {
+            resiTableBody.innerHTML = '';
+            if (daftarResiData.length === 0) {
+                emptyData.classList.remove('hidden');
+                return;
+            }
+            emptyData.classList.add('hidden');
+            daftarResiData.forEach((resi, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="py-3 px-4">${KURIR_NAMA[resi.kurir] || resi.kurir}</td>
+                    <td class="py-3 px-4 font-mono text-sm">${resi.noResi}</td>
+                    <td class="py-3 px-4 hidden sm:table-cell">${resi.penerima || '-'}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded text-xs ${STATUS_WARNA[resi.status] || 'bg-gray-100 text-gray-700'}">
+                            ${resi.status}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="editResiAt(${idx})" class="text-blue-500 hover:text-blue-700 mr-2">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button onclick="hapusResiAt('${resi.id}')" class="text-red-500 hover:text-red-700">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                resiTableBody.appendChild(tr);
+            });
+        }
+
+        window.editResiAt = function(idx) {
+            const resi = daftarResiData[idx];
+            document.getElementById('editResiId').value = idx;
+            document.getElementById('editKurir').value = resi.kurir;
+            document.getElementById('editNoResi').value = resi.noResi;
+            document.getElementById('editPengirim').value = resi.pengirim || '';
+            document.getElementById('editPenerima').value = resi.penerima || '';
+            document.getElementById('editStatus').value = resi.status;
+            document.getElementById('editRiwayat').value = resi.riwayat.map(r => `${r.tanggal}|${r.jam}|${r.keterangan}`).join('\n');
+            document.getElementById('formTitle').textContent = 'Edit Data Resi';
+            document.getElementById('editNoResi').readOnly = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.hapusResiAt = function(docId) {
+            hapusResi(docId);
+        };
+
+        function resetForm() {
+            document.getElementById('resiForm').reset();
+            document.getElementById('editResiId').value = '';
+            document.getElementById('formTitle').textContent = 'Tambah Data Resi';
+            document.getElementById('editNoResi').readOnly = false;
+        }
+        document.getElementById('resetFormBtn').addEventListener('click', resetForm);
+
+        resiForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const editIndex = document.getElementById('editResiId').value;
+            const kurir = document.getElementById('editKurir').value;
+            const noResi = document.getElementById('editNoResi').value.trim().toUpperCase();
+            const pengirim = document.getElementById('editPengirim').value.trim();
+            const penerima = document.getElementById('editPenerima').value.trim();
+            const status = document.getElementById('editStatus').value;
+            const riwayatText = document.getElementById('editRiwayat').value.trim();
+            
+            if (!noResi) { alert('Nomor resi tidak boleh kosong!'); return; }
+            
+            const riwayatBaris = riwayatText.split('\n').filter(b => b.trim());
+            const riwayat = riwayatBaris.map(baris => {
+                const [tgl, jam, ...ket] = baris.split('|');
+                return {
+                    tanggal: tgl?.trim() || '-',
+                    jam: jam?.trim() || '-',
+                    keterangan: ket.join('|').trim() || baris
+                };
+            });
+            
+            const data = { kurir, noResi, pengirim, penerima, status, riwayat };
+            
+            if (editIndex !== '') {
+                await updateResi(daftarResiData[editIndex].id, data);
+            } else {
+                const ada = daftarResiData.find(r => r.kurir === kurir && r.noResi.toUpperCase() === noResi);
+                if (ada) { alert('Resi ini sudah ada! Pilih edit untuk memperbarui.'); return; }
+                await tambahResi(data);
+            }
+        });
+
+        // Muat data saat halaman dibuka
+        ambilSemuaResi();
+    </script>
+</body>
+</html>
