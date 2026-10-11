@@ -38,6 +38,14 @@
                 width: 2px; background: #e5e7eb;
             }
             .status-item:last-child .status-bar::before { display: none; }
+            /* Teks berjalan tetap menempel di atas */
+            .marquee-sticky { position: sticky; top: 0; z-index: 30; }
+            .marquee-wrap { overflow: hidden; white-space: nowrap; }
+            .marquee-text { display: inline-block; animation: marquee 18s linear infinite; }
+            @keyframes marquee {
+                from { transform: translateX(100%); }
+                to { transform: translateX(-100%); }
+            }
         }
     </style>
 </head>
@@ -54,6 +62,13 @@
         </div>
     </nav>
 
+    <!-- Teks berjalan STICKY -->
+    <div class="marquee-sticky bg-primary/90 text-white py-2 marquee-wrap">
+        <div class="marquee-text">
+            🚚 Selamat datang di situs Cek Resi Indonesia – Lacak paket JNE, J&T, SiCepat, Pos Indonesia, Anteraja dan lainnya dengan cepat & mudah | Periksa riwayat perjalanan paket Anda kapan saja | Gunakan nomor resi untuk mendapatkan status terkini!
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
         <!-- Loading -->
@@ -63,7 +78,6 @@
                 <p class="mt-2 text-gray-600">Memuat data...</p>
             </div>
         </div>
-
         <!-- Cek Resi Section -->
         <section id="cekResiSection" class="max-w-2xl mx-auto">
             <div class="bg-white rounded-2xl shadow-card p-6 mb-8">
@@ -101,7 +115,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Hasil Pencarian -->
             <div id="hasilSection" class="hidden">
                 <div class="bg-white rounded-2xl shadow-card p-6 mb-6">
@@ -115,12 +128,43 @@
                     <div id="timelineContainer" class="space-y-6 mt-6"></div>
                 </div>
             </div>
-
             <!-- Pesan Tidak Ditemukan -->
             <div id="notFoundSection" class="hidden text-center py-12">
                 <i class="fa fa-search-minus text-5xl text-gray-300 mb-4"></i>
                 <h3 class="text-xl font-semibold text-gray-600 mb-2">Data Resi Tidak Ditemukan</h3>
                 <p class="text-gray-400">Silakan periksa kembali nomor resi dan jasa pengiriman Anda</p>
+            </div>
+        </section>
+
+        <!-- Tentang Web Kami -->
+        <section class="max-w‑3xl mx-auto mt‑12 bg‑white rounded‑2xl shadow‑card p‑6">
+            <h2 class="text‑2xl font‑bold text‑gray‑800 mb‑4 flex items‑center gap‑2">
+                <i class="fa fa‑info‑circle text‑primary"></i> Tentang Web Kami
+            </h2>
+            <p class="text‑gray‑600 mb‑3">
+                <strong>Cek Resi Indonesia</strong> adalah platform pelacakan paket buatan lokal untuk memudahkan Anda melihat status pengiriman dari berbagai jasa ekspedisi di Indonesia.
+            </p>
+            <p class="text‑gray‑600 mb‑3">
+                Kami menyediakan tampilan riwayat perjalanan paket secara jelas dengan tampilan waktu‑peristiwa, sehingga Anda dapat memantau kapan paket diambil, dikirim, tiba di kota tujuan hingga diterima penerima.
+            </p>
+            <p class="text‑gray‑600">
+                Situs ini dilengkapi panel admin untuk memasukkan dan memperbarui data resi secara manual, cocok untuk usaha kecil, toko daring, atau kebutuhan pelacakan internal.
+            </p>
+            <div class="mt‑5 grid sm:grid‑cols‑3 gap‑4 text‑center">
+                <div class="bg‑gray‑50 p‑4 rounded‑xl">
+                    <i class="fa fa‑clock‑o text‑3xl text‑primary mb‑2"></i>
+                    <h4 class="font‑semibold">Cepat</h4>
+                    <p class="text‑sm text‑gray‑500">Lihat status dalam hitungan detik</p>
+                </div>
+                <div class="bg‑gray‑50 p‑4 rounded‑xl">
+                    <i class="fa fa‑truck text‑3xl text‑primary mb‑2"></i>
+                    <h4 class="font‑semibold">Banyak Ekspedisi</h4>
+                    <p class="text‑sm text‑gray‑500">Mendukung lebih dari 10 jasa pengiriman</p>
+                </div>
+                <div class="bg‑gray‑50 p‑4 rounded‑xl">
+                    <i class="fa fa‑shield text‑3xl text‑primary mb‑2"></i>
+                    
+                </div>
             </div>
         </section>
 
@@ -147,7 +191,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Panel Admin -->
         <section id="adminSection" class="max-w-4xl mx-auto hidden">
             <div class="flex justify-between items-center mb-6">
@@ -156,7 +199,6 @@
                     <i class="fa fa-sign-out"></i> Keluar
                 </button>
             </div>
-
             <!-- Form Tambah/Edit Resi -->
             <div class="bg-white rounded-2xl shadow-card p-6 mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4" id="formTitle">Tambah Data Resi</h3>
@@ -199,7 +241,6 @@
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Status Terkini</label>
                         <select id="editStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
@@ -213,20 +254,17 @@
                             <option value="Dikembalikan ke Pengirim">Dikembalikan ke Pengirim</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Riwayat Status (Format: Tanggal|Jam|Keterangan)</label>
                         <textarea id="editRiwayat" rows="5" placeholder="2026-10-08|16:30|Paket diterima&#10;2026-10-08|10:15|Sedang diantar"
                             class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"></textarea>
                     </div>
-
                     <div class="flex gap-3 pt-2">
                         <button type="button" id="resetFormBtn" class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Reset</button>
                         <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition">Simpan</button>
                     </div>
                 </form>
             </div>
-
             <!-- Daftar Resi -->
             <div class="bg-white rounded-2xl shadow-card p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Daftar Resi</h3>
@@ -248,37 +286,28 @@
             </div>
         </section>
     </main>
-
     <footer class="bg-gray-800 text-gray-400 py-6 mt-12">
         <div class="container mx-auto px-4 text-center text-sm">
             <p>© 2026 Cek Resi Indonesia - Semua Jasa Pengiriman</p>
         </div>
     </footer>
-
     <script>
         // ==========================================
-        // 🔧 GANTI BAGIAN INI DENGAN FIREBASE KAMU!
+        // 🔧 KONFIGURASI FIREBASE
         // ==========================================
         const firebaseConfig = {
-  apiKey: "AIzaSyAN0aB0YnjduZiPZVMSnZBEbk6AtuC0hnQ",
-  authDomain: "cekresinya.firebaseapp.com",
-  projectId: "cekresinya",
-  storageBucket: "cekresinya.firebasestorage.app",
-  messagingSenderId: "76791022621",
-  appId: "1:76791022621:web:0c1daa7297adcebf7cb2f4"
-};
-
-
-        // Inisialisasi Firebase
+            apiKey: "AIzaSyAN0aB0YnjduZiPZVMSnZBEbk6AtuC0hnQ",
+            authDomain: "cekresinya.firebaseapp.com",
+            projectId: "cekresinya",
+            storageBucket: "cekresinya.firebasestorage.app",
+            messagingSenderId: "76791022621",
+            appId: "1:76791022621:web:0c1daa7297adcebf7cb2f4"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const RESI_COLLECTION = "data_resi";
-
-        // Konfigurasi Login Admin
         const ADMIN_USER = 'admin';
-        const ADMIN_PASS = 'admin123'; // Ganti sesuka hati ya!
-
-        // Nama & Status
+        const ADMIN_PASS = 'admin123';
         const KURIR_NAMA = {
             jne: 'JNE', jnt: 'J&T Express', tiki: 'TIKI', pos: 'Pos Indonesia',
             sicepat: 'SiCepat', anteraja: 'Anteraja', ninja: 'Ninja Xpress',
@@ -295,12 +324,8 @@
             'Sudah Diterima': 'bg-green-100 text-green-800',
             'Dikembalikan ke Pengirim': 'bg-red-100 text-red-800'
         };
-
-        // State
         let isLoggedIn = false;
         let daftarResiData = [];
-
-        // DOM Elements
         const cekResiSection = document.getElementById('cekResiSection');
         const adminSection = document.getElementById('adminSection');
         const loginModal = document.getElementById('loginModal');
@@ -318,242 +343,108 @@
         const resiTableBody = document.getElementById('resiTableBody');
         const emptyData = document.getElementById('emptyData');
 
-        // ==========================================
-        // 🔥 FUNGSI FIREBASE
-        // ==========================================
-        
-        // Tampilkan/Sembunyikan Loading
         function showLoading() { loading.classList.remove('hidden'); }
         function hideLoading() { loading.classList.add('hidden'); }
-
-        // Ambil Semua Data Resi
         async function ambilSemuaResi() {
             try {
                 const snapshot = await db.collection(RESI_COLLECTION).orderBy('createdAt', 'desc').get();
-                daftarResiData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                daftarResiData = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 renderDaftarResi();
-            } catch (e) {
-                console.error("Error ambil data:", e);
-                alert("Gagal memuat data: " + e.message);
-            }
+            } catch (e) { console.error(e); alert("Gagal memuat data: " + e.message); }
         }
-
-        // Tambah Resi Baru
         async function tambahResi(data) {
             try {
                 showLoading();
-                await db.collection(RESI_COLLECTION).add({
-                    ...data,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert('Berhasil ditambahkan!');
-                await ambilSemuaResi();
-                resetForm();
-            } catch (e) {
-                alert("Gagal menambah: " + e.message);
-            } finally {
-                hideLoading();
-            }
+                await db.collection(RESI_COLLECTION).add({...data, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+                alert('Berhasil ditambahkan!'); await ambilSemuaResi(); resetForm();
+            } catch (e) { alert("Gagal menambah: " + e.message); } finally { hideLoading(); }
         }
-
-        // Update Resi
         async function updateResi(docId, data) {
             try {
                 showLoading();
-                await db.collection(RESI_COLLECTION).doc(docId).update({
-                    ...data,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert('Berhasil diperbarui!');
-                await ambilSemuaResi();
-                resetForm();
-            } catch (e) {
-                alert("Gagal mengupdate: " + e.message);
-            } finally {
-                hideLoading();
-            }
+                await db.collection(RESI_COLLECTION).doc(docId).update({...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+                alert('Berhasil diperbarui!'); await ambilSemuaResi(); resetForm();
+            } catch (e) { alert("Gagal mengupdate: " + e.message); } finally { hideLoading(); }
         }
-
-        // Hapus Resi
         async function hapusResi(docId) {
             if (!confirm('Yakin ingin menghapus?')) return;
-            try {
-                showLoading();
-                await db.collection(RESI_COLLECTION).doc(docId).delete();
-                await ambilSemuaResi();
-            } catch (e) {
-                alert("Gagal menghapus: " + e.message);
-            } finally {
-                hideLoading();
-            }
+            try { showLoading(); await db.collection(RESI_COLLECTION).doc(docId).delete(); await ambilSemuaResi(); }
+            catch (e) { alert("Gagal menghapus: " + e.message); } finally { hideLoading(); }
         }
-
-        // ==========================================
-        // 🖥️ ANTARMUKA & EVENT
-        // ==========================================
-
-        // Buka Login
         adminBtn.addEventListener('click', () => {
-            if (isLoggedIn) {
-                showAdminPanel();
-            } else {
-                loginModal.classList.remove('hidden');
-                document.getElementById('usernameInput').value = '';
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('loginError').classList.add('hidden');
-            }
+            if(isLoggedIn) showAdminPanel();
+            else { loginModal.classList.remove('hidden'); document.getElementById('usernameInput').value=''; document.getElementById('passwordInput').value=''; document.getElementById('loginError').classList.add('hidden'); }
         });
-
-        // Login
         masukBtn.addEventListener('click', () => {
-            const user = document.getElementById('usernameInput').value;
-            const pass = document.getElementById('passwordInput').value;
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
-                isLoggedIn = true;
-                loginModal.classList.add('hidden');
-                showAdminPanel();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
+            const u = document.getElementById('usernameInput').value;
+            const p = document.getElementById('passwordInput').value;
+            if(u===ADMIN_USER && p===ADMIN_PASS) { isLoggedIn=true; loginModal.classList.add('hidden'); showAdminPanel(); }
+            else document.getElementById('loginError').classList.remove('hidden');
         });
-
-        // Batal Login
-        batalLogin.addEventListener('click', () => loginModal.classList.add('hidden'));
-        loginModal.addEventListener('click', e => e.target === loginModal && loginModal.classList.add('hidden'));
-
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            isLoggedIn = false;
-            adminSection.classList.add('hidden');
-            cekResiSection.classList.remove('hidden');
-            resetForm();
-        });
-
-        // Cek Resi
+        batalLogin.addEventListener('click', ()=>loginModal.classList.add('hidden'));
+        loginModal.addEventListener('click', e=>{ if(e.target===loginModal) loginModal.classList.add('hidden'); });
+        logoutBtn.addEventListener('click', ()=>{ isLoggedIn=false; adminSection.classList.add('hidden'); cekResiSection.classList.remove('hidden'); resetForm(); });
         cekBtn.addEventListener('click', cariResi);
-        resiInput.addEventListener('keypress', e => e.key === 'Enter' && cariResi());
-
+        resiInput.addEventListener('keypress', e=>{ if(e.key==='Enter') cariResi(); });
         function cariResi() {
             const kurir = kurirSelect.value;
             const noResi = resiInput.value.trim().toUpperCase();
-            hasilSection.classList.add('hidden');
-            notFoundSection.classList.add('hidden');
-            
-            if (!kurir || !noResi) {
-                alert('Pilih jasa dan masukkan nomor resi!');
-                return;
-            }
-            
-            const ditemukan = daftarResiData.find(r => 
-                r.kurir === kurir && r.noResi.toUpperCase() === noResi
-            );
-            
+            hasilSection.classList.add('hidden'); notFoundSection.classList.add('hidden');
+            if(!kurir || !noResi) { alert('Pilih jasa dan masukkan nomor resi!'); return; }
+            const ditemukan = daftarResiData.find(r=>r.kurir===kurir && r.noResi.toUpperCase()===noResi);
             ditemukan ? tampilkanHasil(ditemukan) : notFoundSection.classList.remove('hidden');
         }
-
         function tampilkanHasil(data) {
             hasilSection.classList.remove('hidden');
             document.getElementById('hasilKurir').textContent = KURIR_NAMA[data.kurir];
             document.getElementById('hasilResi').textContent = data.noResi;
-            
             const statusEl = document.getElementById('hasilStatus');
             statusEl.textContent = data.status;
-            statusEl.className = `px-3 py-1 rounded-full text-sm font-medium ${STATUS_WARNA[data.status] || 'bg-gray-100 text-gray-700'}`;
-            
-            const container = document.getElementById('timelineContainer');
-            container.innerHTML = '';
-            
-            data.riwayat.forEach((item, idx) => {
-                const isLatest = idx === 0;
+            statusEl.className = `px-3 py-1 rounded-full text-sm font-medium ${STATUS_WARNA[data.status]||'bg-gray-100 text-gray-700'}`;
+            const container = document.getElementById('timelineContainer'); container.innerHTML='';
+            data.riwayat.forEach((item, idx)=>{
+                const isLatest = idx===0;
                 const div = document.createElement('div');
-                div.className = `status-item status-bar flex gap-4 ${isLatest ? '' : 'opacity-75'}`;
-                div.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <div class="w-9 h-9 rounded-full flex items-center justify-center ${isLatest ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}">
-                            <i class="fa ${isLatest ? 'fa-check-circle' : 'fa-circle'} text-xs"></i>
-                        </div>
-                    </div>
-                    <div class="pb-6 flex-1">
-                        <p class="font-medium text-gray-800">${item.keterangan}</p>
-                        <p class="text-sm text-gray-500">${item.tanggal} — ${item.jam}</p>
-                    </div>
-                `;
+                div.className = `status-item status-bar flex gap-4 ${isLatest?'':'opacity-75'}`;
+                div.innerHTML = `<div class="flex flex-col items-center"><div class="w-9 h-9 rounded-full flex items-center justify-center ${isLatest?'bg-primary text-white':'bg-gray-200 text-gray-500'}"><i class="fa ${isLatest?'fa-check-circle':'fa-circle'} text-xs"></i></div></div><div class="pb-6 flex-1"><p class="font-medium text-gray-800">${item.keterangan}</p><p class="text-sm text-gray-500">${item.tanggal} — ${item.jam}</p></div>`;
                 container.appendChild(div);
             });
         }
-
         function showAdminPanel() {
-            cekResiSection.classList.add('hidden');
-            adminSection.classList.remove('hidden');
-            hasilSection.classList.add('hidden');
-            notFoundSection.classList.add('hidden');
-            ambilSemuaResi();
+            cekResiSection.classList.add('hidden'); adminSection.classList.remove('hidden'); hasilSection.classList.add('hidden'); notFoundSection.classList.add('hidden'); ambilSemuaResi();
         }
-
         function renderDaftarResi() {
-            resiTableBody.innerHTML = '';
-            if (daftarResiData.length === 0) {
-                emptyData.classList.remove('hidden');
-                return;
-            }
+            resiTableBody.innerHTML='';
+            if(daftarResiData.length===0) { emptyData.classList.remove('hidden'); return; }
             emptyData.classList.add('hidden');
-            daftarResiData.forEach((resi, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `
-                    <td class="py-3 px-4">${KURIR_NAMA[resi.kurir] || resi.kurir}</td>
-                    <td class="py-3 px-4 font-mono text-sm">${resi.noResi}</td>
-                    <td class="py-3 px-4 hidden sm:table-cell">${resi.penerima || '-'}</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-0.5 rounded text-xs ${STATUS_WARNA[resi.status] || 'bg-gray-100 text-gray-700'}">
-                            ${resi.status}
-                        </span>
-                    </td>
-                    <td class="py-3 px-4 text-center">
-                        <button onclick="editResiAt(${idx})" class="text-blue-500 hover:text-blue-700 mr-2">
-                            <i class="fa fa-pencil"></i>
-                        </button>
-                        <button onclick="hapusResiAt('${resi.id}')" class="text-red-500 hover:text-red-700">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                `;
+            daftarResiData.forEach((resi, idx)=>{
+                const tr = document.createElement('tr'); tr.className='border-b hover:bg-gray-50';
+                tr.innerHTML = `<td class="py-3 px-4">${KURIR_NAMA[resi.kurir]||resi.kurir}</td><td class="py-3 px-4 font-mono text-sm">${resi.noResi}</td><td class="py-3 px-4 hidden sm:table-cell">${resi.penerima||'-'}</td><td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs ${STATUS_WARNA[resi.status]||'bg-gray-100 text-gray-700'}">${resi.status}</span></td><td class="py-3 px-4 text-center"><button onclick="editResiAt(${idx})" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fa fa-pencil"></i></button><button onclick="hapusResiAt('${resi.id}')" class="text-red-500 hover:text-red-700"><i class="fa fa-trash"></i></button></td>`;
                 resiTableBody.appendChild(tr);
             });
         }
-
         window.editResiAt = function(idx) {
             const resi = daftarResiData[idx];
             document.getElementById('editResiId').value = idx;
             document.getElementById('editKurir').value = resi.kurir;
             document.getElementById('editNoResi').value = resi.noResi;
-            document.getElementById('editPengirim').value = resi.pengirim || '';
-            document.getElementById('editPenerima').value = resi.penerima || '';
+            document.getElementById('editPengirim').value = resi.pengirim||'';
+            document.getElementById('editPenerima').value = resi.penerima||'';
             document.getElementById('editStatus').value = resi.status;
-            document.getElementById('editRiwayat').value = resi.riwayat.map(r => `${r.tanggal}|${r.jam}|${r.keterangan}`).join('\n');
+            document.getElementById('editRiwayat').value = resi.riwayat.map(r=>`${r.tanggal}|${r.jam}|${r.keterangan}`).join('\n');
             document.getElementById('formTitle').textContent = 'Edit Data Resi';
             document.getElementById('editNoResi').readOnly = true;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({top:0, behavior:'smooth'});
         };
-
-        window.hapusResiAt = function(docId) {
-            hapusResi(docId);
-        };
-
+        window.hapusResiAt = function(docId) { hapusResi(docId); };
         function resetForm() {
-            document.getElementById('resiForm').reset();
-            document.getElementById('editResiId').value = '';
+            resiForm.reset(); document.getElementById('editResiId').value='';
             document.getElementById('formTitle').textContent = 'Tambah Data Resi';
             document.getElementById('editNoResi').readOnly = false;
         }
         document.getElementById('resetFormBtn').addEventListener('click', resetForm);
-
         resiForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const editIndex = document.getElementById('editResiId').value;
             const kurir = document.getElementById('editKurir').value;
             const noResi = document.getElementById('editNoResi').value.trim().toUpperCase();
@@ -561,31 +452,20 @@
             const penerima = document.getElementById('editPenerima').value.trim();
             const status = document.getElementById('editStatus').value;
             const riwayatText = document.getElementById('editRiwayat').value.trim();
-            
-            if (!noResi) { alert('Nomor resi tidak boleh kosong!'); return; }
-            
-            const riwayatBaris = riwayatText.split('\n').filter(b => b.trim());
-            const riwayat = riwayatBaris.map(baris => {
+            if(!noResi) { alert('Nomor resi tidak boleh kosong!'); return; }
+            const riwayatBaris = riwayatText.split('\n').filter(b=>b.trim());
+            const riwayat = riwayatBaris.map(baris=>{
                 const [tgl, jam, ...ket] = baris.split('|');
-                return {
-                    tanggal: tgl?.trim() || '-',
-                    jam: jam?.trim() || '-',
-                    keterangan: ket.join('|').trim() || baris
-                };
+                return {tanggal: tgl?.trim()||'-', jam: jam?.trim()||'-', keterangan: ket.join('|').trim()||baris};
             });
-            
-            const data = { kurir, noResi, pengirim, penerima, status, riwayat };
-            
-            if (editIndex !== '') {
-                await updateResi(daftarResiData[editIndex].id, data);
-            } else {
-                const ada = daftarResiData.find(r => r.kurir === kurir && r.noResi.toUpperCase() === noResi);
-                if (ada) { alert('Resi ini sudah ada! Pilih edit untuk memperbarui.'); return; }
+            const data = {kurir, noResi, pengirim, penerima, status, riwayat};
+            if(editIndex!=='') await updateResi(daftarResiData[editIndex].id, data);
+            else {
+                const ada = daftarResiData.find(r=>r.kurir===kurir && r.noResi.toUpperCase()===noResi);
+                if(ada) { alert('Resi ini sudah ada! Pilih edit untuk memperbarui.'); return; }
                 await tambahResi(data);
             }
         });
-
-        // Muat data saat halaman dibuka
         ambilSemuaResi();
     </script>
 </body>
